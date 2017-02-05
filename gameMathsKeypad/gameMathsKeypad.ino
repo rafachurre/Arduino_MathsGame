@@ -27,7 +27,7 @@
 #include <Keypad.h>
 
 const byte ROWS = 4; //four rows
-const byte COLS = 4; //three columns
+const byte COLS = 4; //four columns
 char keys[ROWS][COLS] = {
   {'1','2','3','A'},
   {'4','5','6','B'},
@@ -40,14 +40,14 @@ byte colPins[COLS] = {9, 8, 7, 6}; //connect to the column pinouts of the keypad
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 
 //vars
-bool waitResult = false; //flag: el jugador tiene que introducir el resultado
-bool pressKey = false; //flag: el jugador tiene que pulsar una tecla cualquiera
-int numberOfErrors = 0; //contador: errores cometidos
-int level = 1; //contador: nivel alcanzado
-int number1 = 0; //primer numero de la operacion
-int number2 = 0; //segundo numero de la operacion
+bool waitResult = false; //flag: when new result submitted -> true
+bool pressKey = false; //flag: player pressed a random key -> true
+int numberOfErrors = 0; //counter: number of fails
+int level = 1; //counter: current level
+int number1 = 0; //operation: firts number
+int number2 = 0; //operation: second number
 int operation = 1; //1='+'; 2='-'; 3='x';
-String resultString = ""; //variable que va almacenando los numero que va pulsando
+String resultString = ""; //stores the pressed numbers in a String
 
 void setup(){
   Serial.begin(9600);
@@ -61,20 +61,20 @@ void setup(){
 }
 
 void loop(){
-  if (!waitResult && !pressKey){ //si no estoy esperando por el resultado o por una tecla cualquiera
-    if(numberOfErrors < 3){ // si aun me quedan vidas
+  if (!waitResult && !pressKey){ //If I'm not waiting for a result or a random key
+    if(numberOfErrors < 3){ // if I still have lifes. Max 3 failures
       
-      //Calculo los numeros y la operacion
+      //Generate numbers and the operation
       generateOperation();
       generateNumbers();
       
-      //imprimo el nivel
+      //Print level
       Serial.println("--------");
       Serial.print("Nivel ");
       Serial.println(String(level));
       Serial.println("--------");
       
-      //imprimo la operacion
+      //print operation
       Serial.print(String(number1) + " ");
       switch(operation){
         case 1: 
@@ -93,34 +93,34 @@ void loop(){
       Serial.print(" " + String(number2));
       Serial.println("=");
       
-      //fijo los flags: esperando por resultado
+      //set flags: waiting for result
       waitResult = true;
       pressKey = false;
     }
-    else{  //si no me quedan vidas
+    else{  //if no more lifes
       Serial.println("Ya has fallado 3 veces. Tomate un descanso");
       waitResult = false;
       pressKey = true;
     }
   }
-  else{ //si estoy esperando por resultado o por una tecla cualquiera
+  else{ //if waiting for any result or a random key
     char key = keypad.getKey();
-    if (key != NO_KEY){//si presiono una tecla
+    if (key != NO_KEY){//if key pressed
       
-      // Si estoy esperando por una tecla cualquiera
+      // if I was waiting for a random key
       if (pressKey){
-        pressKey = false; //fijo el flag: la tecla ya fue pulsada
+        pressKey = false; //reset flag: a key was already pressed
       }
 
-      // Si estoy esperando el resultado
-      else if (key == '*' ||key == '#' ||key == 'A' ||key == 'B' ||key == 'C' ||key == 'D'){ //si presiono una tecla que no sea numero, confirmo el resultado introducido
+      // if waiting for a result
+      else if (key == '*' ||key == '#' ||key == 'A' ||key == 'B' ||key == 'C' ||key == 'D'){ //if I press a key different than a number: submit the result
         Serial.println();
         //Serial.println(resultString); //debugging
         checkResult(resultString);
-        resultString = ""; //limpio la variable para la siguiente operacion
+        resultString = ""; //clear String for the next operation
       }
 
-      else{ // Mientras introduzca numeros, los almaceno e imprimo
+      else{ // While introducing numbers: store and print
         resultString += key;
         Serial.print(key);
       }
@@ -129,14 +129,14 @@ void loop(){
 }
 
 /*
- * Comprueba si el resultado es correcto
+ * Check if the result is correct
  */
 void checkResult(String resultString){  
   int resultInteger = resultString.toInt();
   int trueResult = 0;
 
   //calculate trueResult
-  switch(operation){ // calcula el resultado correcto dependiendo de la operacion
+  switch(operation){ // calculate the correct result depending on the operation
     case 1: 
       trueResult = number1+number2;
       break;
@@ -150,40 +150,40 @@ void checkResult(String resultString){
       trueResult = number1*number2;
       break;
   }
-  if(trueResult == resultInteger){ //si es correcto
-    Serial.println("Acertaste!!!!"); //lo comunica por pantalla
-    waitResult = false; //fija el flag: no esta esperando un resultado
-    pressKey = true; //fija el flag: presiona una tecla cualquiera para avanzar
-    level += 1; //sube un nivel
+  if(trueResult == resultInteger){ //if correct
+    Serial.println("Acertaste!!!!"); //print greetings message
+    waitResult = false; //set flag: not waiting for result
+    pressKey = true; //set flag: press a random key for the next operation
+    level += 1; //level up
   }
-  else{ //si es incorrecto
-    Serial.println("OOOHH!! Fallaste :(");
-    Serial.println("El resultado era: " + String(trueResult));
+  else{ //if incorrect
+    Serial.println("OOOHH!! Fallaste :("); //print failure message
+    Serial.println("El resultado era: " + String(trueResult)); // print correct result
     Serial.println("Prueba otra vez");
-    waitResult = false; //fija el flag: no esta esperando un resultado
-    pressKey = true; //fija el flag: presiona una tecla cualquiera para avanzar
-    numberOfErrors += 1; //incrementa el contador de errores
+    waitResult = false; //set flag: not waiting for result
+    pressKey = true; //set flag: press a random key for the next operation
+    numberOfErrors += 1; //increase the errors counter
   }
 }
 
 /*
- * Genera los numeros segun el nivel alcanzado
+ * Generates random numbers depending on the level
  */
 void generateNumbers(){
-  int maxRandom = 10; //en los 10 primeros niveles: solo numeros de 1 digito (sumas y restas)
-  if (level>=10 && level<20){ //del nivel 10 al 20: numeros de 1 o 2 digitos (sumas y restas)
+  int maxRandom = 10; //First 10 levels: only 1 digit operations (add and substract)
+  if (level>=10 && level<20){ //level 10 to 20: 1 or 2 digits operations (add and substract)
     maxRandom = 100;
   }
-  else if (level>=20 && level<25){ //del nivel 20 al 25: solo numeros de 1 (multiplicacion)
+  else if (level>=20 && level<25){ //level 20 to 25: only 1 digit operations (multiply)
     maxRandom = 10;
   }
-  else if (level>=25){ //del nivel 25 en adelante: numeros de 1 o 2 digitos (del 25 al 30 multiplicaciones; del 30 en adelante, cualquier operacion)
+  else if (level>=25){ //level >=25: 1 or 2 digits number (25 to 30 multiply; >30 random operation)
     maxRandom = 100;
   }
-  number1 = random(maxRandom); //genera el numero 1
-  number2 = random(maxRandom); //genera el numero 2
+  number1 = random(maxRandom); //generates number 1
+  number2 = random(maxRandom); //generates number 2
   
-  if(operation == 2){ // si es una resta, evitamos resultados negativos obligando a que number2 < number1
+  if(operation == 2){ // if substraction, avoid negative resulsts (number2 always < number1)
     int temp = min(number1,number2);
     number1 = max(number1, number2);
     number2 = temp;
@@ -191,24 +191,24 @@ void generateNumbers(){
 }
 
 /*
- * Genera la operacion segun el nivel alcanzado
+ * Generates operation depending on level
  */
 void generateOperation(){
-  if(level<5){ //del nivel 1 al 5: suma (1 digito)
+  if(level<5){ //level 1 to 5: add (1 digit)
     operation = 1;
-  }else if (level>=5 && level<10){ //del nivel 5 al 10: resta (1 digito)
+  }else if (level>=5 && level<10){ //level 5 to 10: substract (1 digit)
     operation = 2;
   }
-  else if (level>=10 && level<15){ //del nivel 10 al 15: suma (1 o 2 digitos)
+  else if (level>=10 && level<15){ //level 10 to 15: add (1 or 2 digits)
     operation = 1;
   }
-  else if (level>=15 && level<20){ //del nivel 15 al 20: resta (1 o 2 digitos)
+  else if (level>=15 && level<20){ //level 15 to 20: substract (1 or 2 digits)
     operation = 2;
   }
-  else if (level>=20 && level<30){ //del nivel 20 al 30: multiplicacion (del 20 al 25: 1 digito; del 25 al 30: 1 o 2 digitos)
+  else if (level>=20 && level<30){ //level 20 to 30: multiply (20 to 25: 1 digit; 25 to 30: 1 or 2 digits)
     operation = 3;
   }
-  else if (level > 30){// a partir del nivel 30: operacion random
+  else if (level > 30){// level 30+: random operation
     operation = random(1,3);
   }
 }
