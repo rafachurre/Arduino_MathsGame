@@ -1,6 +1,6 @@
 # Arduino MathsGame
 
-Maths game for Arduino. This game is part of a [link](https://www.google.com "Candy Dispenser project")
+Maths game for Arduino. This game is part of a [Candy Dispenser project](https://github.com/rafachurre/Arduino_candyDispenserMathsGame "Candy Dispenser project")
 
 ## Dependencies
 
