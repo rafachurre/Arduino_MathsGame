@@ -13,6 +13,7 @@ Maths game for Arduino. This game is part of a [Candy Dispenser project](https:/
 
 ## Usage
 
-I'm using a keypad like this one: https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQ2I9oJZBKcjEsiGn6DnFQMbe-oOwzhtzOfHKEvL3pjTYqoIoPuLA
+I'm using a keypad like this one: 
+![alt Keypad Image](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcQ2I9oJZBKcjEsiGn6DnFQMbe-oOwzhtzOfHKEvL3pjTYqoIoPuLA "4x4 Keypad")
 
 Use the red keys to enter your result.
